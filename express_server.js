@@ -65,7 +65,14 @@ app.get("/", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
   urlDatabase[generateRandomString()] = req.body["longURL"];
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  res.redirect("/urls");
+});
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  console.log(req.params);
+  delete urlDatabase[req.params.shortURL];
+  console.log("post received");
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
