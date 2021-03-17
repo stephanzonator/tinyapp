@@ -85,6 +85,21 @@ app.get("/urls", (req, res) => {
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
+
+app.post("/register", (req, res) => {
+  console.log("register posting correctly")
+  const randString = generateRandomString();
+  users[randString] = {
+    id: randString, 
+    email: req.body.email, 
+    password: req.body.password
+  } 
+  console.log("full users:", users);
+  // res.cookie("username", req.body.username);
+  res.redirect("/register");
+});
+
+
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
   res.redirect("/urls");
