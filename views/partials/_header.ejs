@@ -15,12 +15,12 @@
       <% if(username){ %>
         <h3><span>Hello <%=username%>!</span></h3>
         <form action="/logout" method="POST">
-          <button>Log out</button>
+          <button class="btn btn-primary">Log out</button>
         </form>
       <% } else{ %>  
         <form action="/login" method="POST">
           Username: <input type = "text" name = "username"/>
-          <button>Log in</button>
+          <button class="btn btn-primary">Log in</button>
         </form>
       <% } %>
       
