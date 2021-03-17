@@ -17,6 +17,19 @@ function generateRandomString() {
   return result.slice(0,6);
 }
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -36,6 +49,11 @@ const urlDatabase = {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
   
 // });
+
+app.get("/register", (req, res) => {
+  const templateVars = {"username": req.cookies["username"]};
+  res.render("urls_register", templateVars);
+});
 
 app.get("/urls/new", (req, res) => {
   // const cookies = cookieParser.JSONCookies(req.headers.cookie);
