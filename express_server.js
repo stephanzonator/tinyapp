@@ -6,7 +6,9 @@ const bodyParser = require("body-parser");
 var cookieSession = require('cookie-session');
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
-const userLookup = require('./helpers');
+const helpers = require('./helpers');
+const userLookup = helpers.userLookup; 
+const urlFilter = helpers.urlFilter;
 
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -50,16 +52,7 @@ const users = {
   }
 };
 
-const urlFilter = function(userId) {
-  let result = {};
-  for (url in urlDatabase) {
-    if (urlDatabase[url]["userID"] === userId) {
-      result[url] = urlDatabase[url];
-    }
-  }
-  // console.log("urlFilter", result, urlDatabase);
-  return result;
-};
+
 
 // function userLookupById(idPass) {
 //   // console.log("userlookup: ", idPass);
@@ -131,7 +124,7 @@ app.get("/urls", (req, res) => {
   if (!user) {
     return res.redirect("/login");
   }
-  const templateVars = {"user_id": req.session.user_id, urls: urlFilter(req.session.user_id), "user": user};
+  const templateVars = {"user_id": req.session.user_id, urls: urlFilter(req.session.user_id, urlDatabase), "user": user};
   res.render("urls_index", templateVars);
 });
 
