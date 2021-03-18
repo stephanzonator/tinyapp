@@ -4,6 +4,7 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const morgan = require('morgan');
+const bcrypt = require('bcrypt');
 
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -26,18 +27,18 @@ const users = {
   "userRandomID": { //Pass this user object to your templates via templateVars.
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "$2b$10$heMSN2K596eFuaaklJoYWeRNqj.uGIDL2LShv2KgWoQSxKDGT.58u"
   },
  "user2RandomID": {
     id: "user2RandomID", 
     email: "user2@example.com", 
-    password: "dishwasher-funk"
+    password: "$2b$10$heMSN2K596eFuaaklJoYWeRNqj.uGIDL2LShv2KgWoQSxKDGT.58u"
   },
 
   "q6ibtc": {
     id: "q6ibtc", 
     email: "a@a.com", 
-    password: "asdf"
+    password: "$2b$10$heMSN2K596eFuaaklJoYWeRNqj.uGIDL2LShv2KgWoQSxKDGT.58u"
   }
 };
 
@@ -142,6 +143,8 @@ app.get("/", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  const password = req.body.password; // found in the req.params object
+  const hashedPassword = bcrypt.hashSync(password, 10);
   if (!req.body.email || !req.body.password) {
     return res.status(400).send('Please fill out all forms.');
   } 
@@ -153,7 +156,7 @@ app.post("/register", (req, res) => {
   users[randString] = {
     id: randString, 
     email: req.body.email, 
-    password: req.body.password
+    password: hashedPassword
   } 
   // console.log("full users:", users);
   res.cookie("user_id", randString);
