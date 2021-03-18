@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 var cookieSession = require('cookie-session');
 const morgan = require('morgan');
 const bcrypt = require('bcrypt');
+const userLookup = require('./helpers');
 
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -47,18 +48,6 @@ const users = {
     email: "a@a.com", 
     password: "$2b$10$PK4gZQ..Ofg0z4et.ldnJuwO5/r/g.FFUAEfiTB20n2S5FMUqxl0."
   }
-};
-
-const userLookup = function(emailPass, users) {
-  for (user in users) {
-    // console.log("userlookup log: ", emailPass, users[user], users[user]["email"]);
-    if (users[user]["email"] === emailPass) {
-      // console.log("Found ID:", users[user]["email"], "equivalent to", emailPass);
-      return user;
-    }
-  }
-  // console.log("User not found");
-  return null;
 };
 
 const urlFilter = function(userId) {
@@ -156,7 +145,7 @@ app.post("/register", (req, res) => {
   if (!req.body.email || !req.body.password) {
     return res.status(400).send('Please fill out all forms.');
   } 
-  if (userLookup(req.body.email, urlDatabase)) {
+  if (userLookup(req.body.email, users)) {
     return res.status(400).send('User already exists.');
   }
   // console.log("register posting correctly")
@@ -166,7 +155,7 @@ app.post("/register", (req, res) => {
     email: req.body.email, 
     password: hashedPassword
   } 
-  console.log("full users:", users);
+  // console.log("full users:", users);
   //OLD SYNTAX res.cookie("user_id", randString);
   req.session.user_id = randString;
   return res.redirect("/urls");  
@@ -175,14 +164,16 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => {
   // console.log("Post login email lookup: ", req.body.email);
-  const user = userLookup(req.body.email, urlDatabase);
+  const user = userLookup(req.body.email, users);
   if (!user) {
+    console.log("user not found");
     return res.status(403).send('Invalid credentials.');
   } 
 
   // const comparePass = bcrypt.compare(req.body.password, users[user]["password"];
   bcrypt.compare(req.body.password, users[user]["password"]).then(function(result) {
     if (!result) {
+      console.log("wrong password");
       return res.status(403).send('Invalid credentials.');
     }
     // console.log("/login post: ", users[user]["id"])
