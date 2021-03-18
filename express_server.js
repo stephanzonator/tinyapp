@@ -12,10 +12,15 @@ app.use(morgan('dev'));
 
 app.set("view engine", "ejs");
 
-function generateRandomString() {
+const generateRandomString = function() {
   let result = Math.random().toString(36).replace('0.', '');
   return result.slice(0,6);
-}
+};
+
+const urlDatabase = {
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "q6ibtc" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+};
 
 const users = { 
   "userRandomID": { //Pass this user object to your templates via templateVars.
@@ -34,9 +39,9 @@ const users = {
     email: "a@a.com", 
     password: "asdf"
   }
-}
+};
 
-function userLookup(emailPass) {
+const userLookup = function(emailPass) {
   for (user in users) {
     // console.log("userlookup log: ", emailPass, users[user], users[user]["email"]);
     if (users[user]["email"] === emailPass) {
@@ -46,7 +51,18 @@ function userLookup(emailPass) {
   }
   console.log("User not found");
   return null;
-}
+};
+
+const urlFilter = function(userId) {
+  let result = {};
+  for (url in urlDatabase) {
+    if (urlDatabase[url]["userID"] === userId) {
+      result[url] = urlDatabase[url];
+    }
+  }
+  // console.log("urlFilter", result, urlDatabase);
+  return result;
+};
 
 // function userLookupById(idPass) {
 //   // console.log("userlookup: ", idPass);
@@ -67,10 +83,13 @@ function userLookup(emailPass) {
 // }
 
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
+
+
 
 app.get("/login", (req, res) => { 
   const user = users[req.cookies["user_id"]];
@@ -85,16 +104,16 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  // const user = userLookupById(req.cookies["user_id"]);
   const user = users[req.cookies["user_id"]];
-  // console.log("urls/new user log", user, user.email);
+  if (!user) {
+    return res.redirect("/login");
+  }
   const templateVars = {"user_id": req.cookies["user_id"], "user": user};
-  // console.log("/urls/new: ", req.cookies["user_id"], user.email); //.email
   res.render("urls_new", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL]["longURL"];
   res.redirect(longURL);
 });
 
@@ -111,7 +130,10 @@ app.get("/urls.json", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = users[req.cookies["user_id"]];
-  const templateVars = {"user_id": req.cookies["user_id"], urls: urlDatabase, "user": user};
+  if (!user) {
+    return res.redirect("/login");
+  }
+  const templateVars = {"user_id": req.cookies["user_id"], urls: urlFilter(req.cookies["user_id"]), "user": user};
   res.render("urls_index", templateVars);
 });
 
@@ -145,7 +167,7 @@ app.post("/login", (req, res) => {
   if (users[user]["password"] !== req.body.password || !user) {
     return res.status(403).send('Invalid credentials.');
   }
-  console.log("/login post: ", users[user]["id"])
+  // console.log("/login post: ", users[user]["id"])
   res.cookie("user_id", users[user]["id"]);
   res.redirect("/urls");
 });
@@ -156,23 +178,47 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  urlDatabase[generateRandomString()] = req.body["longURL"];
+  const user = users[req.cookies["user_id"]];
+  if (!user) {
+    return res.redirect("/login");
+  }
+  // console.log(req.body);  // Log the POST request body to the console
+  urlDatabase[generateRandomString()] = {"longURL": req.body["longURL"], "userID": req.cookies["user_id"]};
   res.redirect("/urls");
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  console.log(req.params);
-  delete urlDatabase[req.params.shortURL];
-  console.log("post received");
-  res.redirect("/urls");
+  const user = users[req.cookies["user_id"]];
+  if (!user) {
+    return res.redirect("/login");
+  }
+  if (urlDatabase[req.params.shortURL]["userID"] === req.cookies["user_id"]) {
+    // console.log(req.params);
+    delete urlDatabase[req.params.shortURL];
+    console.log("post deleted");
+    res.redirect("/urls");
+  } else {
+    console.log("not deleted");
+    return res.status(403).send('Invalid credentials.');
+  }
+  
 });
 
 app.post("/urls/:shortURL/update", (req, res) => {
-  console.log(req.body.newLink);
-  urlDatabase[req.params.shortURL] = req.body.newLink;
-  console.log("post received");
-  res.redirect("/urls");
+  const user = users[req.cookies["user_id"]];
+  if (!user) {
+    return res.redirect("/login");
+  }
+  if (urlDatabase[req.params.shortURL]["userID"] === req.cookies["user_id"]) {
+    // console.log(req.body.newLink);
+    urlDatabase[req.params.shortURL] = {"longURL": req.body.newLink, "userID": req.cookies["user_id"]}
+    //b6UTxQ: { longURL: "https://www.tsn.ca", userID: "q6ibtc" },
+    console.log("post received");
+    res.redirect("/urls");
+  } else {
+    console.log("not changed");
+    res.redirect("/urls");
+  }
 });
 
 app.listen(PORT, () => {
