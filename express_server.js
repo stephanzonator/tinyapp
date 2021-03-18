@@ -38,9 +38,9 @@ const users = {
 
 function userLookup(emailPass) {
   for (user in users) {
-    console.log("userlookup log: ", user);
-    if (user["email"] === emailPass) {
-      console.log("Found ID:", user["id"], "equivalent to", emailPass);
+    // console.log("userlookup log: ", emailPass, users[user], users[user]["email"]);
+    if (users[user]["email"] === emailPass) {
+      // console.log("Found ID:", users[user]["email"], "equivalent to", emailPass);
       return user;
     }
   }
@@ -71,6 +71,12 @@ const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+app.get("/login", (req, res) => { 
+  const user = users[req.cookies["user_id"]];
+  const templateVars = {"user_id": req.cookies["user_id"], "user": user};
+  res.render("urls_login", templateVars);
+});
 
 app.get("/register", (req, res) => { 
   const user = users[req.cookies["user_id"]];
@@ -114,7 +120,13 @@ app.get("/", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  console.log("register posting correctly")
+  if (!req.body.email || !req.body.password) {
+    return res.status(400).send('Please fill out all forms.');
+  } 
+  if (userLookup(req.body.email)) {
+    return res.status(400).send('User already exists.');
+  }
+  // console.log("register posting correctly")
   const randString = generateRandomString();
   users[randString] = {
     id: randString, 
@@ -123,14 +135,18 @@ app.post("/register", (req, res) => {
   } 
   // console.log("full users:", users);
   res.cookie("user_id", randString);
-  res.redirect("/urls");
+  return res.redirect("/urls");  
 });
 
 
 app.post("/login", (req, res) => {
-  console.log("Post login email lookup: ", req.body.email);
+  // console.log("Post login email lookup: ", req.body.email);
   const user = userLookup(req.body.email);
-  res.cookie("user_id", user.id);
+  if (users[user]["password"] !== req.body.password || !user) {
+    return res.status(403).send('Invalid credentials.');
+  }
+  console.log("/login post: ", users[user]["id"])
+  res.cookie("user_id", users[user]["id"]);
   res.redirect("/urls");
 });
 
