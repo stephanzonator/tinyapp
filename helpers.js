@@ -1,6 +1,6 @@
 const userLookup = function(emailPass, users) {
   console.log("userlookup function called correctly");
-  for (user in users) {
+  for (let user in users) {
     // console.log("userlookup log: ", emailPass, users[user], users[user]["email"]);
     if (users[user]["email"] === emailPass) {
       // console.log("Found ID:", users[user]["email"], "equivalent to", emailPass);
@@ -14,7 +14,7 @@ const userLookup = function(emailPass, users) {
 const urlFilter = function(userId, urlDatabase) {
   // console.log("url filter function called correctly", userId, urlDatabase);
   let result = {};
-  for (url in urlDatabase) {
+  for (let url in urlDatabase) {
     if (urlDatabase[url]["userID"] === userId) {
       result[url] = urlDatabase[url];
     }

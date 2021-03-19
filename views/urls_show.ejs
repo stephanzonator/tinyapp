@@ -20,7 +20,7 @@
 
   <% if(user_id && user){ %>
   <div class="card text-center">
-    <form action="/urls/<%= shortURL %>/update" method="POST">
+    <form action="/urls/<%= shortURL %>" method="POST">
       New Link: <input type = "text" name = "newLink" />
       <button>Update</button>
     </form>
